@@ -10,6 +10,9 @@ use regex::Regex;
 use yandex::client::YandexTranslate;
 use yandex::answer::GetInfo;
 
+use std::collections::HashMap;
+use std::i64;
+
 struct Rumblr {
     tumblr_key: String,
     tumblr_secret: String,
@@ -146,12 +149,24 @@ impl Rumblr {
     }
 
     fn reblog_post(&self, post: &Post, blog: &str, caption: &str) {
+        /*
         oauth::post(
             &format!(
                 "https://api.tumblr.com/v2/blog/{}/post/reblog?api_key={}&type={}&id={}&reblog_key={}&comment={}",
                 blog, self.api_key, post.post_type(), post.id(), post.reblog_key(), caption
             ),
             &self.oauth_token(), None, None
+        ).expect("reblog fail");
+        */
+        let mut params: oauth::ParamList = HashMap::new();
+        params.insert("api_key".into(), self.tumblr_token_secret.clone().into());
+        params.insert("type".into(), post.post_type().into());
+        params.insert("id".into(), post.id().to_string().into());
+        params.insert("reblog_key".into(), post.reblog_key().into());
+        params.insert("comment".into(), caption.into());
+        oauth::post(
+            &format!("https://api.tumblr.com/v2/blog/{}/post/reblog", blog),
+            &self.oauth_token(), None, Some(&params)
         ).expect("reblog fail");
     }
 }
